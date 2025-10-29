@@ -1,6 +1,6 @@
 // register.js
 // Replace with your Heroku backend URL (do NOT include trailing slash)
-const API_BASE = "https://profilehub-backend.onrender.com"; 
+const API_BASE = "https://profilehub-backend.onrender.com/php"; 
 
 $(document).ready(function () {
   // Multi-step navigation
