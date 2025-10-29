@@ -17,7 +17,7 @@ if (!mysqli_real_connect(
     getenv('MYSQL_HOST'),
     getenv('MYSQL_USER'),
     getenv('MYSQL_PASSWORD'),
-    getenv('MYSQL_DB'),
+    getenv('MYSQL_DATABASE'),
     3306,
     NULL,
     MYSQLI_CLIENT_SSL
@@ -31,7 +31,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use MongoDB\Client;
 
 try {
-    $mongo = new Client(getenv('MONGO_URL'));
+    $mongo = new Client(getenv('MONGO_URI'));
     $profiles = $mongo->ProfileHub->profiles;
 } catch (Exception $e) {
     echo json_encode(["status" => "error", "msg" => "MongoDB connection failed: " . $e->getMessage()]);
