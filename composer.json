@@ -1,0 +1,17 @@
+{
+  "name": "nilaasri/profilehub",
+  "description": "ProfileHub project - Full Stack using PHP, MySQL, MongoDB, Redis Cloud, AJAX (Heroku deployable)",
+  "require": {
+    "php": "^8.2",
+    "ext-mysqli": "*",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-json": "*",
+    "ext-curl": "*",
+    "ext-redis": "*",
+    "ext-mongodb": "*"
+  },
+  "scripts": {
+    "start": "php -S 0.0.0.0:${PORT} -t ."
+  }
+}
