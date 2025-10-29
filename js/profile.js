@@ -1,6 +1,6 @@
 // profile.js
 // Replace with your Heroku backend URL (do NOT include trailing slash)
-const API_BASE = "https://your-heroku-backend.herokuapp.com";
+const API_BASE = "https://profilehub-backend.onrender.com";
 
 $(document).ready(function () {
   // Accept session from either localStorage or sessionStorage
