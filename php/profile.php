@@ -16,7 +16,7 @@ if (!mysqli_real_connect(
     getenv("MYSQL_HOST"),
     getenv("MYSQL_USER"),
     getenv("MYSQL_PASSWORD"),
-    getenv("MYSQL_DB"),
+    getenv("MYSQL_DATABASE"),
     3306,
     NULL,
     MYSQLI_CLIENT_SSL
