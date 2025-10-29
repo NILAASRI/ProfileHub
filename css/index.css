@@ -1,0 +1,28 @@
+.card-custom {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      transition: transform 0.2s;
+    }
+
+    
+    .btn-custom {
+      border-radius: 50px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+
+    .btn-custom:hover {
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 576px) {
+      .card-custom {
+        padding: 1.5rem;
+      }
+    }
