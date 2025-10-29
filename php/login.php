@@ -3,9 +3,10 @@ header('Content-Type: application/json');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Origin: https://profilehub-1.onrender.com"); 
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Credentials: true");
 
 // --- MySQL (Aiven) ---
 $mysqli = mysqli_init();
