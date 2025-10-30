@@ -1,6 +1,6 @@
 <?php
 // ------------------- CORS FIX -------------------
-header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com");
+header("Access-Control-Allow-Origin: https://profilehub-2.onrender.com");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // ------------------- BASIC SETTINGS -------------------
 header('Content-Type: application/json');
-ini_set('display_errors', 0);
-error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 // ------------------- MYSQL CONNECTION -------------------
 $mysqli = mysqli_init();
