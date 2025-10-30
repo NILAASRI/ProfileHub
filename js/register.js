@@ -1,9 +1,9 @@
 // register.js
-// Replace with your Heroku backend URL (do NOT include trailing slash)
-const API_BASE = "https://profilehub-backend.onrender.com/php"; 
+const API_BASE = "https://profilehub-backend.onrender.com/php";
 
 $(document).ready(function () {
-  // Multi-step navigation
+
+  // Step navigation
   $("#nextBtn").on("click", function () {
     const name = $("#name").val().trim();
     const email = $("#email").val().trim();
@@ -33,11 +33,8 @@ $(document).ready(function () {
     $("#step1").show();
   });
 
-  // Submit registration (form-encoded because register.php expects $_POST)
+  // Registration submit
   $("#registerBtn").on("click", function () {
-    const $btn = $(this);
-    $btn.prop("disabled", true);
-
     const payload = {
       name: $("#name").val().trim(),
       email: $("#email").val().trim(),
@@ -51,34 +48,25 @@ $(document).ready(function () {
     };
 
     $.ajax({
-      url: API_BASE + "/register.php",
+      url: `${API_BASE}/register.php`,
       type: "POST",
+      data: payload,
       dataType: "json",
-      data: payload, // sent as application/x-www-form-urlencoded
-      crossDomain: true,
-      beforeSend: function () {
-        console.log("Sending registration request...");
-      },
       success: function (res) {
         console.log("Response:", res);
         if (res.status === "success") {
-          alert(res.msg || "Registered successfully. Please login.");
+          alert(res.msg);
           $("#registerForm")[0].reset();
           $("#step2").hide();
           $("#step1").show();
-          // optional redirect to login:
-          // window.location.href = "login.html";
         } else {
-          alert(res.msg || "Registration failed. See console for details.");
+          alert(res.msg || "Registration failed.");
         }
       },
       error: function (xhr, status, error) {
         console.error("AJAX Error:", status, error);
         console.log("Response Text:", xhr.responseText);
-        alert("Error during registration. Check console logs.");
-      },
-      complete: function () {
-        $btn.prop("disabled", false);
+        alert("Error connecting to the server. Try again later.");
       }
     });
   });
