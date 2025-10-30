@@ -1,31 +1,22 @@
 <?php
-// --- Set JSON response type ---
-header('Content-Type: application/json; charset=UTF-8');
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-
-// --- CORS Configuration ---
-$allowed_origins = ["https://guvi-intern-md3o.onrender.com"]; // frontend domain(s)
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: $origin");
-    header("Access-Control-Allow-Credentials: true");
-} else {
-    // Optionally, block or allow temporarily for testing
-    header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com");
-}
-
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+// ------------------- CORS FIX -------------------
+header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
 
-// --- Handle preflight request ---
+// Stop CORS preflight errors (browser sends OPTIONS before POST)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit();
+    exit;
 }
 
-// --- MySQL (Aiven Cloud) ---
+// ------------------- BASIC SETTINGS -------------------
+header('Content-Type: application/json');
+ini_set('display_errors', 0);
+error_reporting(E_ERROR | E_PARSE);
+
+// ------------------- MYSQL CONNECTION -------------------
 $mysqli = mysqli_init();
 mysqli_ssl_set($mysqli, NULL, NULL, '/etc/ssl/certs/ca-certificates.crt', NULL, NULL);
 
@@ -39,11 +30,11 @@ if (!mysqli_real_connect(
     NULL,
     MYSQLI_CLIENT_SSL
 )) {
-    echo json_encode(["status" => "error", "msg" => "MySQL connection failed: " . mysqli_connect_error()]);
+    echo json_encode(["status" => "error", "msg" => "MySQL connection failed"]);
     exit;
 }
 
-// --- MongoDB (Atlas) ---
+// ------------------- MONGODB CONNECTION -------------------
 require __DIR__ . '/../vendor/autoload.php';
 use MongoDB\Client;
 
@@ -51,11 +42,11 @@ try {
     $mongo = new Client(getenv('MONGO_URI'));
     $profiles = $mongo->ProfileHub->profiles;
 } catch (Exception $e) {
-    echo json_encode(["status" => "error", "msg" => "MongoDB connection failed: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "msg" => "MongoDB connection failed"]);
     exit;
 }
 
-// --- Redis (Optional) ---
+// ------------------- REDIS CONNECTION (OPTIONAL) -------------------
 $redis = null;
 try {
     $redisUrl = getenv('REDIS_URL');
@@ -63,15 +54,13 @@ try {
         $p = parse_url($redisUrl);
         $redis = new Redis();
         $redis->connect($p['host'], $p['port']);
-        if (isset($p['pass'])) {
-            $redis->auth($p['pass']);
-        }
+        if (isset($p['pass'])) $redis->auth($p['pass']);
     }
 } catch (Exception $e) {
     error_log("Redis not available: " . $e->getMessage());
 }
 
-// --- Collect POST data ---
+// ------------------- INPUT VALIDATION -------------------
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
@@ -82,13 +71,12 @@ $age = intval($_POST['age'] ?? 0);
 $address = trim($_POST['address'] ?? '');
 $gender = trim($_POST['gender'] ?? '');
 
-// --- Validation ---
 if (empty($name) || empty($email) || empty($password)) {
-    echo json_encode(["status" => "error", "msg" => "Name, Email, and Password required"]);
+    echo json_encode(["status" => "error", "msg" => "Name, Email, and Password are required"]);
     exit;
 }
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(["status" => "error", "msg" => "Invalid email"]);
+    echo json_encode(["status" => "error", "msg" => "Invalid email format"]);
     exit;
 }
 if ($password !== $confirm) {
@@ -96,18 +84,18 @@ if ($password !== $confirm) {
     exit;
 }
 
-// --- Hash Password ---
+// ------------------- PASSWORD HASH -------------------
 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-// --- Insert into MySQL ---
+// ------------------- MYSQL INSERT -------------------
 $stmt = $mysqli->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
 $stmt->bind_param("ss", $email, $hashedPassword);
 
 if ($stmt->execute()) {
     $userId = $stmt->insert_id;
 
-    // --- Insert profile into MongoDB ---
     try {
+        // ------------------- MONGO PROFILE INSERT -------------------
         $profiles->insertOne([
             "userId" => $userId,
             "name" => $name,
@@ -120,7 +108,7 @@ if ($stmt->execute()) {
             "created_at" => new MongoDB\BSON\UTCDateTime()
         ]);
 
-        // --- Redis Cache session (optional) ---
+        // ------------------- REDIS SESSION CACHE -------------------
         if ($redis) {
             $sessionKey = "session:user:$userId";
             $redis->setex($sessionKey, 3600, json_encode([
@@ -130,10 +118,10 @@ if ($stmt->execute()) {
             ]));
         }
 
-        echo json_encode(["status" => "success", "msg" => "Registered successfully"]);
+        echo json_encode(["status" => "success", "msg" => "Registered successfully!"]);
     } catch (Exception $e) {
         $mysqli->query("DELETE FROM users WHERE id=$userId");
-        echo json_encode(["status" => "error", "msg" => "MongoDB insert failed: " . $e->getMessage()]);
+        echo json_encode(["status" => "error", "msg" => "Profile save failed"]);
     }
 } else {
     echo json_encode(["status" => "error", "msg" => "Email already exists or MySQL error"]);
