@@ -48,7 +48,7 @@ $(document).ready(function () {
     };
 
     $.ajax({
-      url: "https://profilehub-backend.onrender.com/php/register.php",
+      url: "https://profilehub-2.onrender.com/php/register.php",
       method: "POST",
       data: payload,
       dataType: "json",
