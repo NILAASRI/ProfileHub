@@ -1,5 +1,5 @@
 // register.js
-const API_BASE = "https://profilehub-backend.onrender.com/php";
+const API_BASE = "https://guvi-intern-md3o.onrender.com/php";
 
 $(document).ready(function () {
 
