@@ -1,5 +1,5 @@
 // register.js
-const API_BASE = "https://guvi-intern-md3o.onrender.com/php";
+//const API_BASE = "https://guvi-intern-md3o.onrender.com/php";
 
 $(document).ready(function () {
 
@@ -48,7 +48,7 @@ $(document).ready(function () {
     };
 
     $.ajax({
-      url: `${API_BASE}/register.php`,
+      url: "https://profilehub-backend.onrender.com/php/register.php",
       type: "POST",
       data: payload,
       dataType: "json",
