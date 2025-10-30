@@ -1,14 +1,29 @@
 <?php
-header('Content-Type: application/json');
+// --- Set JSON response type ---
+header('Content-Type: application/json; charset=UTF-8');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Allow access only from frontend
-header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com/");
-//header("Access-Control-Allow-Origin: https://profilehubnew.vercel.app");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+// --- CORS Configuration ---
+$allowed_origins = ["https://guvi-intern-md3o.onrender.com"]; // frontend domain(s)
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header("Access-Control-Allow-Credentials: true");
+} else {
+    // Optionally, block or allow temporarily for testing
+    header("Access-Control-Allow-Origin: https://guvi-intern-md3o.onrender.com");
+}
+
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Credentials: true");
+
+// --- Handle preflight request ---
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // --- MySQL (Aiven Cloud) ---
 $mysqli = mysqli_init();
@@ -40,7 +55,7 @@ try {
     exit;
 }
 
-// --- Redis (Cloud / Optional) ---
+// --- Redis (Optional) ---
 $redis = null;
 try {
     $redisUrl = getenv('REDIS_URL');
@@ -56,7 +71,7 @@ try {
     error_log("Redis not available: " . $e->getMessage());
 }
 
-// --- POST data ---
+// --- Collect POST data ---
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
@@ -84,14 +99,14 @@ if ($password !== $confirm) {
 // --- Hash Password ---
 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-// --- MySQL Insert ---
+// --- Insert into MySQL ---
 $stmt = $mysqli->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
 $stmt->bind_param("ss", $email, $hashedPassword);
 
 if ($stmt->execute()) {
     $userId = $stmt->insert_id;
 
-    // --- Mongo Insert ---
+    // --- Insert profile into MongoDB ---
     try {
         $profiles->insertOne([
             "userId" => $userId,
@@ -127,4 +142,3 @@ if ($stmt->execute()) {
 $stmt->close();
 $mysqli->close();
 ?>
-
