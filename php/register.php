@@ -35,7 +35,7 @@ if (!mysqli_real_connect(
 }
 
 // ------------------- MONGODB CONNECTION -------------------
-require __DIR__ . '/../vendor/autoload.php';
+//require __DIR__ . '/../vendor/autoload.php';
 use MongoDB\Client;
 
 try {
