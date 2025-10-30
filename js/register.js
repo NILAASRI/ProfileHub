@@ -49,7 +49,7 @@ $(document).ready(function () {
 
     $.ajax({
       url: "https://profilehub-backend.onrender.com/php/register.php",
-      type: "POST",
+      method: "POST",
       data: payload,
       dataType: "json",
       success: function (res) {
