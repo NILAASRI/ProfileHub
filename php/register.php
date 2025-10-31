@@ -1,11 +1,11 @@
 <?php
 // ------------------- CORS FIX -------------------
-header("Access-Control-Allow-Origin: https://profilehub-2.onrender.com");
+header("Access-Control-Allow-Origin: https://profilehub-2.onrender.com"); // frontend domain
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 
-// Stop CORS preflight errors (browser sends OPTIONS before POST)
+// Handle preflight request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -20,6 +20,8 @@ error_reporting(E_ALL);
 $mysqli = mysqli_init();
 mysqli_ssl_set($mysqli, NULL, NULL, '/etc/ssl/certs/ca-certificates.crt', NULL, NULL);
 
+$mysqlConnected = false;
+
 if (!mysqli_real_connect(
     $mysqli,
     getenv('MYSQL_HOST'),
@@ -30,34 +32,52 @@ if (!mysqli_real_connect(
     NULL,
     MYSQLI_CLIENT_SSL
 )) {
-    echo json_encode(["status" => "error", "msg" => "MySQL connection failed"]);
+    echo json_encode(["status" => "error", "msg" => "❌ MySQL connection failed: " . mysqli_connect_error()]);
     exit;
+} else {
+    $mysqlConnected = true;
 }
 
 // ------------------- MONGODB CONNECTION -------------------
-//require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 use MongoDB\Client;
 
+$mongoConnected = false;
 try {
     $mongo = new Client(getenv('MONGO_URI'));
     $profiles = $mongo->ProfileHub->profiles;
+    $mongoConnected = true;
 } catch (Exception $e) {
-    echo json_encode(["status" => "error", "msg" => "MongoDB connection failed"]);
+    echo json_encode(["status" => "error", "msg" => "❌ MongoDB connection failed: " . $e->getMessage()]);
     exit;
 }
 
-// ------------------- REDIS CONNECTION (OPTIONAL) -------------------
-$redis = null;
+// ------------------- REDIS CONNECTION -------------------
+$redisConnected = false;
 try {
     $redisUrl = getenv('REDIS_URL');
     if ($redisUrl) {
         $p = parse_url($redisUrl);
         $redis = new Redis();
-        $redis->connect($p['host'], $p['port']);
+        $redis->connect($p['host'], $p['port'], 2.5);
         if (isset($p['pass'])) $redis->auth($p['pass']);
+        if ($redis->ping()) {
+            $redisConnected = true;
+        }
     }
 } catch (Exception $e) {
     error_log("Redis not available: " . $e->getMessage());
+}
+
+// ------------------- CONNECTION CHECK MODE -------------------
+if (isset($_GET['check'])) {
+    echo json_encode([
+        "status" => "ok",
+        "mysql" => $mysqlConnected ? "✅ Connected" : "❌ Failed",
+        "mongo" => $mongoConnected ? "✅ Connected" : "❌ Failed",
+        "redis" => $redisConnected ? "✅ Connected" : "❌ Failed"
+    ]);
+    exit;
 }
 
 // ------------------- INPUT VALIDATION -------------------
@@ -109,7 +129,7 @@ if ($stmt->execute()) {
         ]);
 
         // ------------------- REDIS SESSION CACHE -------------------
-        if ($redis) {
+        if (isset($redis)) {
             $sessionKey = "session:user:$userId";
             $redis->setex($sessionKey, 3600, json_encode([
                 'userId' => $userId,
@@ -118,13 +138,13 @@ if ($stmt->execute()) {
             ]));
         }
 
-        echo json_encode(["status" => "success", "msg" => "Registered successfully!"]);
+        echo json_encode(["status" => "success", "msg" => "✅ Registered successfully! Cloud connections verified."]);
     } catch (Exception $e) {
         $mysqli->query("DELETE FROM users WHERE id=$userId");
-        echo json_encode(["status" => "error", "msg" => "Profile save failed"]);
+        echo json_encode(["status" => "error", "msg" => "MongoDB profile save failed: " . $e->getMessage()]);
     }
 } else {
-    echo json_encode(["status" => "error", "msg" => "Email already exists or MySQL error"]);
+    echo json_encode(["status" => "error", "msg" => "Email already exists or MySQL error: " . $stmt->error]);
 }
 
 $stmt->close();
