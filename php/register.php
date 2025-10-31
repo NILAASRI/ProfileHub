@@ -18,7 +18,17 @@ error_reporting(E_ALL);
 
 // ------------------- MYSQL CONNECTION -------------------
 $mysqli = mysqli_init();
-mysqli_ssl_set($mysqli, NULL, NULL, '/etc/ssl/certs/ca-certificates.crt', NULL, NULL);
+
+// Use your Aiven CA certificate for secure connection
+$caFile = '/var/www/html/ca.pem'; // Path to Aiven CA cert on Render
+if (file_exists($caFile)) {
+    mysqli_ssl_set($mysqli, NULL, NULL, $caFile, NULL, NULL);
+} else {
+    error_log("Aiven CA file not found at $caFile");
+}
+
+// Optional: connection timeout (in seconds)
+mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 10);
 
 $mysqlConnected = false;
 
