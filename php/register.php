@@ -45,17 +45,39 @@ if (!@mysqli_real_connect($mysqli, $host, $user, $pass, $db, $port, NULL, MYSQLI
 }
 
 // ------------------- MONGODB CONNECTION -------------------
+
+// Load Composer autoload (make sure vendor folder exists after 'composer install')
 require_once __DIR__ . '/../vendor/autoload.php';
+
 use MongoDB\Client;
 
 try {
-    $mongo = new Client(getenv('MONGO_URI'));
-    $profiles = $mongo->ProfileHub->profiles;
+    // Always use environment variable for MongoDB URI (Heroku/Render compatible)
+    $mongoUri = getenv('MONGO_URI');
+
+    if (!$mongoUri) {
+        echo json_encode([
+            "status" => "error",
+            "msg" => "❌ MongoDB URI not found in environment variables."
+        ]);
+        exit;
+    }
+
+    // Connect to MongoDB Cloud
+    $mongoClient = new Client($mongoUri);
+
+    // Select Database & Collection
+    $profilesCollection = $mongoClient->ProfileHub->profiles;
+
 } catch (Exception $e) {
-    echo json_encode(["status" => "error", "msg" => "❌ MongoDB connection failed: " . $e->getMessage()]);
-    $mysqli->close();
+    // If connection fails, return JSON error instead of HTML (to avoid parsererror in AJAX)
+    echo json_encode([
+        "status" => "error",
+        "msg" => "❌ MongoDB connection failed: " . $e->getMessage()
+    ]);
     exit;
 }
+
 
 // ------------------- REDIS CONNECTION -------------------
 $redis = null;
