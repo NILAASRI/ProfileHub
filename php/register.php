@@ -45,7 +45,7 @@ if (!@mysqli_real_connect($mysqli, $host, $user, $pass, $db, $port, NULL, MYSQLI
 }
 
 // ------------------- MONGODB CONNECTION -------------------
-require_once __DIR__ . '/../vendor/autoload.php';
+// require_once __DIR__ . '/../vendor/autoload.php';
 use MongoDB\Client;
 
 try {
