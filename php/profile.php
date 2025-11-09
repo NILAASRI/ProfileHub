@@ -42,7 +42,7 @@ try {
 }
 
 // --- MongoDB ---
-require '../vendor/autoload.php';
+//require '../vendor/autoload.php';
 use MongoDB\Client;
 try {
     $mongo = new Client(getenv("MONGO_URL"));
