@@ -9,7 +9,8 @@
     "ext-json": "*",
     "ext-curl": "*",
     "ext-redis": "*",
-    "ext-mongodb": "*"
+    "ext-mongodb": "*",
+    "mongodb/mongodb": "^1.15"
   },
   "scripts": {
     "start": "php -S 0.0.0.0:${PORT} -t ."
